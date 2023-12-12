@@ -1,5 +1,7 @@
 (() => {
+    // TO STORE IMAGE CONFIGURATION, BASE URL
     const CONFIGURATIONS = {};
+    // GENERIC FETCH FUNCTION
     function get(url) {
         const options = {
             method: 'GET',
@@ -24,6 +26,7 @@
         })
     }
 
+    // GET CONFIGURATION
     function getConfiguration() {
         const url = "configuration";
         new Promise(async (resolve, reject) => {
@@ -37,6 +40,7 @@
         })
     }
 
+    // GET NOW PLAYING
     function getLatestMovies() {
         const url = "movie/now_playing?language=en-US&page=1";
         return new Promise(async(resolve, reject) => {
@@ -54,6 +58,7 @@
         })
     }
 
+    // GET MOVIE DETAILS FOR MODAL
     function getMovie(id) {
         return new Promise(async(resolve, reject) => {
             try {
@@ -67,6 +72,7 @@
         })
     }
 
+    // RENDER MOVIE LIST IN THE DOM
     function renderMovieList(list) {
         const TITLE = "<h2>Now Playing</h2>";
         const SECTION = $("#now-playing");
@@ -84,6 +90,7 @@
         addClickListener(list);
     }
 
+    // CREATE MOVIE CARD FOR LIST
     function movieCard({poster_path, id}) {
         const ELEMENT = document.createElement("div");
         ELEMENT.classList = "col-sm-4 p-2";
@@ -95,6 +102,7 @@
         return ELEMENT;
     }
 
+    // ADD EVENT LISTENER WHEN USER CLICK ON MOVIE AND MODAL SHOULD OPEN
     function addClickListener() {
         $(".movie-poster").click(function(e) {
             e.stopPropagation();
@@ -109,6 +117,7 @@
         });
     }
 
+    // GET MOVIE VIDEO FROM API FOR TRAILER
     function getMovieVideo(id) {
         return new Promise(async(resolve, reject) => {
             try {
@@ -130,6 +139,7 @@
         })
     }
     
+    // RENDER MOVIE DATA IN THE MODAL
     async function handleModal(id) {
         const movie = await getMovie(id);
         const video = await getMovieVideo(id);
@@ -187,11 +197,13 @@
         DETAILS_SECTIONS.append(TIMINGS_LIST);
     }
 
+    // WHEN MODAL CLOSES REMOVE ALL ELEMENTS FROM THE MODAL SO THAT NEXT TIME NEW CONTENT COULD BE PUSHED
     document.getElementById("movie-details-modal").addEventListener('hidden.bs.modal', event => {
         $("#modal-movie-image").html("");
         $("#modal-movie-detail").html("");
     })
 
+    // ADD SHIMMER EFFECT IN THE DOM FOR MOVIE LIST
     function shimmerList() {
         const ROW = document.createElement("div");
         ROW.classList = "row";
@@ -205,6 +217,7 @@
         $("#now-playing").append(ROW);
     }
 
+    // ADD SHIMMER EFFECT IN THE MODAL
     function shimmerCard() {
         $("#modal-movie-image").html(`<div class="image-shimmer shimmer w-100 modal-shimmer"></div>`);
         $("#modal-movie-detail").html(`
@@ -221,8 +234,31 @@
         `)
     }
 
+    // EVENT LISTENER FOR SEARCH FUNCTIONALITY
+    $("form").submit((e) => {
+        e.preventDefault();
+        const query = $("#search").val();
+        console.log(query);
+        if (query) searchMovie(query);
+    })
+
+    // GET SEARCH DATA FROM API
+    function searchMovie(query) {
+        return new Promise(async(resolve, reject) => {
+            try {
+                const url = `search/movie?query=${query}&include_adult=false&language=en-US&page=1s`
+                const movies = await get(url);
+                if (movies && movies.results && movies.results.length > 0) {
+                    renderMovieList(movies.results)
+                    resolve(movies.results);
+                }
+            } catch (error) {
+                console.log(error);
+                reject(error);
+            }
+        })
+    }
+
     getConfiguration();
-    setTimeout(() => {
-        getLatestMovies();
-    }, 3000);
+    getLatestMovies();
 })()
